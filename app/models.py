@@ -21,6 +21,15 @@ class MeditationType(str, Enum):
 
 
 # Persistent models (stored in database)
+class SessionCategoryLink(SQLModel, table=True):
+    """Link table for many-to-many relationship between sessions and categories"""
+
+    __tablename__ = "session_category_links"  # type: ignore[assignment]
+
+    session_id: int = Field(foreign_key="meditation_sessions.id", primary_key=True)
+    category_id: int = Field(foreign_key="meditation_categories.id", primary_key=True)
+
+
 class MeditationSession(SQLModel, table=True):
     """A complete meditation session with metadata and instructions"""
 
@@ -41,6 +50,7 @@ class MeditationSession(SQLModel, table=True):
         back_populates="session",
         sa_relationship_kwargs={"cascade": "all, delete-orphan", "order_by": "MeditationInstruction.step_order"},
     )
+    categories: List["MeditationCategory"] = Relationship(back_populates="sessions", link_model=SessionCategoryLink)
 
 
 class MeditationInstruction(SQLModel, table=True):
@@ -60,15 +70,6 @@ class MeditationInstruction(SQLModel, table=True):
     session: MeditationSession = Relationship(back_populates="instructions")
 
 
-class SessionCategoryLink(SQLModel, table=True):
-    """Link table for many-to-many relationship between sessions and categories"""
-
-    __tablename__ = "session_category_links"  # type: ignore[assignment]
-
-    session_id: int = Field(foreign_key="meditation_sessions.id", primary_key=True)
-    category_id: int = Field(foreign_key="meditation_categories.id", primary_key=True)
-
-
 class MeditationCategory(SQLModel, table=True):
     """Categories to organize meditation sessions"""
 
@@ -83,10 +84,6 @@ class MeditationCategory(SQLModel, table=True):
 
     # Many-to-many relationship with sessions
     sessions: List[MeditationSession] = Relationship(back_populates="categories", link_model=SessionCategoryLink)
-
-
-# Add the relationship back to MeditationSession after all models are defined
-MeditationSession.categories = Relationship(back_populates="sessions", link_model=SessionCategoryLink)
 
 
 # Non-persistent schemas (for validation, forms, API requests/responses)

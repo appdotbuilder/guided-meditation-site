@@ -1,11 +1,12 @@
 from app.database import create_tables
-from nicegui import ui
+import app.meditation_library
+import app.meditation_player
 
 
 def startup() -> None:
     # this function is called before the first request
     create_tables()
 
-    @ui.page("/")
-    def index():
-        ui.label("🚧 Work in progress 🚧").style("font-size: 2rem; text-align: center; margin-top: 2rem")
+    # Register meditation modules
+    app.meditation_library.create()
+    app.meditation_player.create()
